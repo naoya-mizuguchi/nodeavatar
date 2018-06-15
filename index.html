@@ -213,6 +213,10 @@
 				document.addEventListener("touchend", onDocumentTouchEnd, false);
 			}
 
+			// if (userAgent == "PC"){
+			if(false){
+				animate();
+			} else {
 			//Blenderで出力したjsonオブジェクト
 			loader = new THREE.JSONLoader();
 			loader.load( 'HumanAnimationTest.json', function ( geometry, materials ) {
@@ -249,7 +253,7 @@
 				} )()
 
 				} );
-
+			}
 		}
 
 		function gameInit() {
@@ -430,9 +434,11 @@
 		}
 
 
-		// function animate() {
-		// 	requestAnimationFrame(animate);
-		// }
+		function animate() {
+			requestAnimationFrame(animate);
+			update();
+			TouchRender();
+		}
 
 
     function handleOrientation(event) {
