@@ -142,15 +142,14 @@
 		enchant();
 		var game;
 		gameInit();
-		init();
 
-    var socket = io.connect(); // C02. ソケットへの接続
+		var socket = io.connect(); // C02. ソケットへの接続
     socket.on("server_to_client",function(data){Change_pos(data.position)});
     socket.on("server_to_client_rotation",function(data){Change_rotate(data.rotation)});
 
-		animate();
+		main();
 
-		function init() {
+		function main() {
 
 			var container, mesh;
 
@@ -213,6 +212,44 @@
 				// タッチを終了すると実行されるイベント
 				document.addEventListener("touchend", onDocumentTouchEnd, false);
 			}
+
+			//Blenderで出力したjsonオブジェクト
+			loader = new THREE.JSONLoader();
+			loader.load( 'HumanAnimationTest.json', function ( geometry, materials ) {
+				for (var i = 0, l = materials.length; i < l; i++) {
+					materials[i].morphTargets = true;
+				}
+				// json = new THREE.Mesh( geometry, materials );
+				json = new THREE.Mesh(geometry, materials);
+				json.position.set( 0,100,0);
+				json.scale.set( 100, 100, 100 );
+				scene.add( json );
+
+				let current_frame = 1,
+						total_frame   = 41;
+
+				let animation = ( function(){
+						update();
+
+						requestAnimationFrame( arguments.callee );
+
+						last_frame = current_frame;
+						current_frame++;
+
+						// 現在のフレーム数が合計のフレーム数以上になったら現在のフレームを始めに戻す
+						if( total_frame <= current_frame ) current_frame = 0;
+
+						json.morphTargetInfluences[last_frame] = 0;
+						json.morphTargetInfluences[current_frame] = 1;
+
+						renderer.render( scene, camera );
+
+						TouchRender();
+
+				} )()
+
+				} );
+
 		}
 
 		function gameInit() {
@@ -393,11 +430,9 @@
 		}
 
 
-		function animate() {
-			requestAnimationFrame(animate);
-			update();
-			TouchRender();
-		}
+		// function animate() {
+		// 	requestAnimationFrame(animate);
+		// }
 
 
     function handleOrientation(event) {
