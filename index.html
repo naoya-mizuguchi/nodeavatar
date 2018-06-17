@@ -2,10 +2,11 @@
 <html lang="ja">
 
 <head>
-	<title>upbody</title>
+	<title>Avatar</title>
 	<meta charset="utf-8">
-  <script type="text/javascript" src="game/three.min.js"></script>
-	<script type="text/javascript" src="game/enchant.min.js"></script>
+<!--   <script type="text/javascript" src="game/three.min.js"></script> -->
+  <script type="text/javascript" src="https://cdn.glitch.com/edd0a2e3-7ffe-40e6-bff9-b7da5134a1cf%2Fthree.min.js?1529241691436"></script>
+  <script type="text/javascript" src="game/enchant.min.js"></script>
   <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 
 	<style>
@@ -142,35 +143,47 @@
 		enchant();
 		var game;
 		gameInit();
+		init();
 
-		var socket = io.connect(); // C02. ソケットへの接続
-    socket.on("server_to_client",function(data){Change_pos(data.position)});
-    socket.on("server_to_client_rotation",function(data){Change_rotate(data.rotation)});
+    // var socket = io.connect(); // C02. ソケットへの接続
+    // socket.on("server_to_client",function(data){Change_pos(data.position)});
+    // socket.on("server_to_client_rotation",function(data){Change_rotate(data.rotation)});
+    
+		// animate();
 
-		main();
-
-		function main() {
+		function init() {
 
 			var container, mesh;
 
 			container = document.getElementById('container');
 
-			camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1100);
-			camera.target = new THREE.Vector3(0, 0, 0);
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1100);
+      camera.position.set(0, 0, 0);
+      camera.lookAt(new THREE.Vector3(0,0,1));
+
 
 			scene = new THREE.Scene();
+ 
+      //ライティング
+      var directionalLight = new THREE.DirectionalLight( 0xffffff, 2 ); //平行光源（色、強度）
+      directionalLight.position.set(-3,-3,-3);
+      scene.add( directionalLight );
+      //グリッド
+      grid = new THREE.GridHelper(1000, 10, 0x888888, 0x888888);
+      grid.position.y = -40;
+      scene.add(grid);
 
-			var geometry = new THREE.SphereGeometry(500, 60, 40);
+      var geometry = new THREE.SphereGeometry(500, 60, 40);
 			geometry.scale(1, 1, -1);
       material = new THREE.MeshBasicMaterial({map:THREE.ImageUtils.loadTexture("Resources/path1.jpg")});
-      for (var i = 1; i<=65; i++){
+      // for (var i = 1; i<=65; i++){
+      for (var i = 1; i<=5; i++){
         materials[i-1] = new THREE.MeshBasicMaterial({map : THREE.ImageUtils.loadTexture("Resources/path" + i + ".jpg")});
       }
 
       if (UserAgent == "PC"){
   			sphere = new THREE.Mesh(geometry, materials[0]);
 	  		sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
-
 		  	scene.add(sphere);
       }
 
@@ -179,81 +192,72 @@
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			container.appendChild(renderer.domElement);
 
-			document.addEventListener('mousedown', onDocumentMouseDown, false);
-			document.addEventListener('mousemove', onDocumentMouseMove, false);
-			document.addEventListener('mouseup', onDocumentMouseUp, false);
-			document.addEventListener('mousewheel', onDocumentMouseWheel, false); //firefox以外
-			document.addEventListener('DOMMouseScroll', onDocumentMouseWheel, false); //firefox
-			window.addEventListener('resize', onWindowResize, false);
-			window.addEventListener('gesturestart',onGestureStart, false);
-			window.addEventListener('gesturechange',onGestureChange, false);
-			window.addEventListener('gestureend',onGestureEnd, false);
-      window.addEventListener("deviceorientation", handleOrientation, true);
+			// document.addEventListener('mousedown', onDocumentMouseDown, false);
+			// document.addEventListener('mousemove', onDocumentMouseMove, false);
+			// document.addEventListener('mouseup', onDocumentMouseUp, false);
+			// document.addEventListener('mousewheel', onDocumentMouseWheel, false); //firefox以外
+			// document.addEventListener('DOMMouseScroll', onDocumentMouseWheel, false); //firefox
+			// window.addEventListener('resize', onWindowResize, false);
+			// window.addEventListener('gesturestart',onGestureStart, false);
+			// window.addEventListener('gesturechange',onGestureChange, false);
+			// window.addEventListener('gestureend',onGestureEnd, false);
+			// window.addEventListener("deviceorientation", handleOrientation, true);
+      
+// 			if ("ongesturestart" in window) {
+// 					console.log("ok");
+// 			 	} else {
+// 					console.log("no");
+// 				}
 
-			if ("ongesturestart" in window) {
-					console.log("ok");
-			 	} else {
-					console.log("no");
-				}
+//       gyroAvailable = false;
+// 			if (window.DeviceMotionEvent) {
+// 				gyroAvailable = true;
+// 			}
+// 			if (gyroAvailable) {
+// 				window.addEventListener("deviceorientation", gyroSensor, false);
+// 			}
 
-      gyroAvailable = false;
-			if (window.DeviceMotionEvent) {
-				gyroAvailable = true;
-			}
-			if (gyroAvailable) {
-				window.addEventListener("deviceorientation", gyroSensor, false);
-			}
+//       if (window.TouchEvent) {
+// 				// タッチを開始すると実行されるイベント
+// 				document.addEventListener("touchstart", onDocumentTouchDown, false);
+// 				// タッチしたまま平行移動すると実行されるイベント
+// 				document.addEventListener("touchmove", onDocumentTouchMove, false);
+// 				// タッチを終了すると実行されるイベント
+// 				document.addEventListener("touchend", onDocumentTouchEnd, false);
+// 			}
+      
+      
+      //Blenderで出力したjsonオブジェクト
+      loader = new THREE.JSONLoader();
+      loader.load( 'HumanAnimationTest.json', function ( geometry, materials ) {
+      for (var i = 0, l = materials.length; i < l; i++) {
+        materials[i].morphTargets = true;
+      }
 
-      if (window.TouchEvent) {
-				// タッチを開始すると実行されるイベント
-				document.addEventListener("touchstart", onDocumentTouchDown, false);
-				// タッチしたまま平行移動すると実行されるイベント
-				document.addEventListener("touchmove", onDocumentTouchMove, false);
-				// タッチを終了すると実行されるイベント
-				document.addEventListener("touchend", onDocumentTouchEnd, false);
-			}
+      json = new THREE.Mesh(geometry, materials);
+      json.position.set( 0,0,200);
+      json.scale.set( 50, 50, 50 );
+      scene.add( json );
 
-			// if (userAgent == "PC"){
-			if(false){
-				animate();
-			} else {
-			//Blenderで出力したjsonオブジェクト
-			loader = new THREE.JSONLoader();
-			loader.load( 'HumanAnimationTest.json', function ( geometry, materials ) {
-				for (var i = 0, l = materials.length; i < l; i++) {
-					materials[i].morphTargets = true;
-				}
-				// json = new THREE.Mesh( geometry, materials );
-				json = new THREE.Mesh(geometry, materials);
-				json.position.set( 0,100,0);
-				json.scale.set( 100, 100, 100 );
-				scene.add( json );
+      let current_frame = 1,
+          total_frame   = 41
 
-				let current_frame = 1,
-						total_frame   = 41;
+      let animation = ( function(){
+          requestAnimationFrame( arguments.callee )
 
-				let animation = ( function(){
-						update();
+          last_frame = current_frame
+          current_frame++
 
-						requestAnimationFrame( arguments.callee );
+          // 現在のフレーム数が合計のフレーム数以上になったら現在のフレームを始めに戻す
+          if( total_frame <= current_frame ) current_frame = 0
 
-						last_frame = current_frame;
-						current_frame++;
+          json.morphTargetInfluences[last_frame] = 0
+          json.morphTargetInfluences[current_frame] = 1
 
-						// 現在のフレーム数が合計のフレーム数以上になったら現在のフレームを始めに戻す
-						if( total_frame <= current_frame ) current_frame = 0;
+          renderer.render( scene, camera )
+      } )()
 
-						json.morphTargetInfluences[last_frame] = 0;
-						json.morphTargetInfluences[current_frame] = 1;
-
-						renderer.render( scene, camera );
-
-						TouchRender();
-
-				} )()
-
-				} );
-			}
+      } );
 		}
 
 		function gameInit() {
@@ -266,313 +270,313 @@
 		}
 
 
-		function onWindowResize() {
+// 		function onWindowResize() {
 
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
+// 			camera.aspect = window.innerWidth / window.innerHeight;
+// 			camera.updateProjectionMatrix();
 
-			renderer.setSize(window.innerWidth, window.innerHeight);
-			game.height = window.innerHeight;
-			game.width = window.innerWidth;
-		}
+// 			renderer.setSize(window.innerWidth, window.innerHeight);
+// 			game.height = window.innerHeight;
+// 			game.width = window.innerWidth;
+// 		}
 
-		function onDocumentMouseDown(event) {
-			event.preventDefault();
+// 		function onDocumentMouseDown(event) {
+// 			event.preventDefault();
 
-			isUserInteracting = true;
+// 			isUserInteracting = true;
 
-			onMouseDownMouseX = event.clientX;
-			onMouseDownMouseY = event.clientY;
+// 			onMouseDownMouseX = event.clientX;
+// 			onMouseDownMouseY = event.clientY;
 
-			onPointerDownLon = lon;
-			onPointerDownLat = lat;
+// 			onPointerDownLon = lon;
+// 			onPointerDownLat = lat;
 
-		}
+// 		}
 
-		function onDocumentMouseMove(event) {
-			MousePosX = event.clientX;
-			MousePosY = event.clientY;
-			if(isUserInteracting == true){
-				lon = (onMouseDownMouseX - event.clientX) * 0.1 + onPointerDownLon;
-				lat = (event.clientY - onMouseDownMouseY) * 0.1 + onPointerDownLat;
-			}
-		}
+// 		function onDocumentMouseMove(event) {
+// 			MousePosX = event.clientX;
+// 			MousePosY = event.clientY;
+// 			if(isUserInteracting == true){
+// 				lon = (onMouseDownMouseX - event.clientX) * 0.1 + onPointerDownLon;
+// 				lat = (event.clientY - onMouseDownMouseY) * 0.1 + onPointerDownLat;
+// 			}
+// 		}
 
-		function onDocumentMouseUp(event) {
-			isUserInteracting = false;
-		}
+// 		function onDocumentMouseUp(event) {
+// 			isUserInteracting = false;
+// 		}
 
-		function onDocumentMouseWheel(event) {
-			event.preventDefault();
-			// WebKit
-			if (event.wheelDeltaY) {
-				pos += event.wheelDeltaY * 0.05;
-				// Opera / Explorer 9
-			} else if (event.wheelDelta) {
-				pos += event.wheelDelta * 0.05;
-				// Firefox
-			} else if (event.detail) {
-				pos -= event.detail * 1.0;
-			}
-			pos = Math.round(pos);
-			if(pos < 1) pos = 1;
-			if(pos > 65) pos = 65;
+// 		function onDocumentMouseWheel(event) {
+// 			event.preventDefault();
+// 			// WebKit
+// 			if (event.wheelDeltaY) {
+// 				pos += event.wheelDeltaY * 0.05;
+// 				// Opera / Explorer 9
+// 			} else if (event.wheelDelta) {
+// 				pos += event.wheelDelta * 0.05;
+// 				// Firefox
+// 			} else if (event.detail) {
+// 				pos -= event.detail * 1.0;
+// 			}
+// 			pos = Math.round(pos);
+// 			if(pos < 1) pos = 1;
+// 			if(pos > 65) pos = 65;
 
-      if (UserAgent == "PC"){
-        scene.remove(sphere);
-        var geometry = new THREE.SphereGeometry(500, 60, 40);
-        geometry.scale(1, 1, -1);
-        sphere = new THREE.Mesh(geometry, materials[pos - 1]);
-        sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
-        scene.add(sphere)
-        socket.emit("client_to_server_broadcast",{position: pos});
-      }
-		}
+//       if (UserAgent == "PC"){
+//         scene.remove(sphere);
+//         var geometry = new THREE.SphereGeometry(500, 60, 40);
+//         geometry.scale(1, 1, -1);
+//         sphere = new THREE.Mesh(geometry, materials[pos - 1]);
+//         sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
+//         scene.add(sphere)
+//         socket.emit("client_to_server_broadcast",{position: pos});
+//       }
+// 		}
 
-		function onGestureStart(event) {
-			isGesture = true;
-		}
+// 		function onGestureStart(event) {
+// 			isGesture = true;
+// 		}
 
-		function onGestureChange(event) {
-			lon += event.rotation * 0.2;
-			rotation = event.rotation;
-			scale = event.scale;
-		}
+// 		function onGestureChange(event) {
+// 			lon += event.rotation * 0.2;
+// 			rotation = event.rotation;
+// 			scale = event.scale;
+// 		}
 
-		function onGestureEnd(event) {
-			isGesture = false;
-		}
+// 		function onGestureEnd(event) {
+// 			isGesture = false;
+// 		}
 
-    	function onDocumentTouchDown(event) {
-			event.preventDefault();
-			isUserInteracting = true;
-			var touches = event.touches;
-			var l = touches.length;
-			touch_num = l;
-			if (l === 1 && isUserInteracting === true) {
-				onPointerDownPointerX = touches[0].clientX;
-				onPointerDownPointerY = touches[0].clientY;
-				onPointerDownLon = lon;
-				onPointerDownLat = lat;
-        before_touch_pos_x = touches[0].clientX;
-        before_touch_pos_y = touches[0].clientY;
-			} else {
-				for (var i = 0; i < l; ++i) {
-					var touch = touches[i];
-				}
-			}
+//     	function onDocumentTouchDown(event) {
+// 			event.preventDefault();
+// 			isUserInteracting = true;
+// 			var touches = event.touches;
+// 			var l = touches.length;
+// 			touch_num = l;
+// 			if (l === 1 && isUserInteracting === true) {
+// 				onPointerDownPointerX = touches[0].clientX;
+// 				onPointerDownPointerY = touches[0].clientY;
+// 				onPointerDownLon = lon;
+// 				onPointerDownLat = lat;
+//         before_touch_pos_x = touches[0].clientX;
+//         before_touch_pos_y = touches[0].clientY;
+// 			} else {
+// 				for (var i = 0; i < l; ++i) {
+// 					var touch = touches[i];
+// 				}
+// 			}
 
-			//表示用
-			touchposX.length = 0;
-			touchposY.length = 0;
-			for (var i = 0; i < touch_num; i++){
-				touchposX.push(touches[i].clientX);
-				touchposY.push(touches[i].clientY);
-			}
-		}
-
-
-		function onDocumentTouchMove(event) {
-			var touches = event.touches;
-			var l = touches.length;
-			if (l === 1 && isUserInteracting === true) {
-				lon = (onPointerDownPointerX - touches[0].screenX) * 0.1 + onPointerDownLon;
-				lat = (touches[0].screenY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
-
-        diff_sum_touch_pos_x += touches[0].clientX - before_touch_pos_x;
-        diff_sum_touch_pos_y += touches[0].clientY - before_touch_pos_y;
-
-        before_touch_pos_x = touches[0].clientX;
-        before_touch_pos_y = touches[0].clientY;
-
-			} else {
-				for (var i = 0; i < l; ++i) {
-					var touch = touches[i];
-				}
-			}
-
-      if(diff_sum_touch_pos_x > 50) {pos += 1; diff_sum_touch_pos_x -= 50; pos_change_flg = true;}
-      if(diff_sum_touch_pos_y > 50) {pos += 1; diff_sum_touch_pos_y -= 50; pos_change_flg = true;}
-      if(diff_sum_touch_pos_x < -50) {pos -= 1; diff_sum_touch_pos_x += 50; pos_change_flg = true;}
-      if(diff_sum_touch_pos_y < -50) {pos -= 1; diff_sum_touch_pos_y += 50; pos_change_flg = true;}
-
-      if (pos_change_flg){
-        if(pos < 1) pos = 1;
-	  		if(pos > 65) pos = 65;
-
-        if (UserAgent == "PC"){
-          scene.remove(sphere);
-          var geometry = new THREE.SphereGeometry(500, 60, 40);
-          geometry.scale(1, 1, -1);
-          sphere = new THREE.Mesh(geometry, materials[pos - 1]);
-          sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
-          scene.add(sphere);
-        }
+// 			//表示用
+// 			touchposX.length = 0;
+// 			touchposY.length = 0;
+// 			for (var i = 0; i < touch_num; i++){
+// 				touchposX.push(touches[i].clientX);
+// 				touchposY.push(touches[i].clientY);
+// 			}
+// 		}
 
 
-        socket.emit("client_to_server_broadcast",{position: pos});
+// 		function onDocumentTouchMove(event) {
+// 			var touches = event.touches;
+// 			var l = touches.length;
+// 			if (l === 1 && isUserInteracting === true) {
+// 				lon = (onPointerDownPointerX - touches[0].screenX) * 0.1 + onPointerDownLon;
+// 				lat = (touches[0].screenY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
 
-        pos_change_flg = false;
-      }
+//         diff_sum_touch_pos_x += touches[0].clientX - before_touch_pos_x;
+//         diff_sum_touch_pos_y += touches[0].clientY - before_touch_pos_y;
 
-      //表示用
-			touchposX.length = 0;
-			touchposY.length = 0;
-			for (var i = 0; i < touch_num; i++){
-				touchposX.push(touches[i].clientX);
-				touchposY.push(touches[i].clientY);
-			}
+//         before_touch_pos_x = touches[0].clientX;
+//         before_touch_pos_y = touches[0].clientY;
 
-		}
+// 			} else {
+// 				for (var i = 0; i < l; ++i) {
+// 					var touch = touches[i];
+// 				}
+// 			}
 
-		function onDocumentTouchEnd(event) {
-			isUserInteracting = false;
-      before_touch_pos_x = 0;
-      before_touch_pos_y = 0;
-      diff_sum_touch_pos_x = 0;
-      diff_sum_touch_pos_y = 0;
-		}
+//       if(diff_sum_touch_pos_x > 50) {pos += 1; diff_sum_touch_pos_x -= 50; pos_change_flg = true;}
+//       if(diff_sum_touch_pos_y > 50) {pos += 1; diff_sum_touch_pos_y -= 50; pos_change_flg = true;}
+//       if(diff_sum_touch_pos_x < -50) {pos -= 1; diff_sum_touch_pos_x += 50; pos_change_flg = true;}
+//       if(diff_sum_touch_pos_y < -50) {pos -= 1; diff_sum_touch_pos_y += 50; pos_change_flg = true;}
 
+//       if (pos_change_flg){
+//         if(pos < 1) pos = 1;
+// 	  		if(pos > 65) pos = 65;
 
-		function animate() {
-			requestAnimationFrame(animate);
-			update();
-			TouchRender();
-		}
+//         if (UserAgent == "PC"){
+//           scene.remove(sphere);
+//           var geometry = new THREE.SphereGeometry(500, 60, 40);
+//           geometry.scale(1, 1, -1);
+//           sphere = new THREE.Mesh(geometry, materials[pos - 1]);
+//           sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
+//           scene.add(sphere);
+//         }
+        
+        
+//         socket.emit("client_to_server_broadcast",{position: pos});
 
+//         pos_change_flg = false;
+//       }
 
-    function handleOrientation(event) {
-      var absolute = event.absolute;
-      var alpha    = event.alpha;
-      var beta     = event.beta;
-      var gamma    = event.gamma;
+//       //表示用
+// 			touchposX.length = 0;
+// 			touchposY.length = 0;
+// 			for (var i = 0; i < touch_num; i++){
+// 				touchposX.push(touches[i].clientX);
+// 				touchposY.push(touches[i].clientY);
+// 			}
 
-      gyro = [alpha, beta, gamma];
-  }
+// 		}
 
-
-
-		function update() {
-			lat = Math.max(-85, Math.min(85, lat));
-			phi = THREE.Math.degToRad(90 - lat);
-			theta = THREE.Math.degToRad(lon - mobile_rotation);
-
-			camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
-			camera.target.y = 500 * Math.cos(phi);
-			camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
-
-      if (gyroAvailable && (_ua.Mobile || _ua.Tablet)){
-        console.log(gyro);
-
-
-        if ((gyro[1] + offset) > 0){
-          sum_plus_roll += (gyro[1] + offset);
-        }
-        if ((gyro[1] + offset) < 0){
-          sum_minus_roll += (gyro[1] + offset);
-        }
-
-        if (sum_plus_roll >= 150){
-          change_flg = true;
-          pos -= 1;
-          sum_plus_roll = 0;
-        }
-        if (sum_minus_roll <= -150){
-          change_flg = true;
-          pos += 1;
-          sum_minus_roll = 0;
-        }
-
-        socket.emit("client_to_server_broadcast_rotation",{rotation: gyro[0]});
+// 		function onDocumentTouchEnd(event) {
+// 			isUserInteracting = false;
+//       before_touch_pos_x = 0;
+//       before_touch_pos_y = 0;
+//       diff_sum_touch_pos_x = 0;
+//       diff_sum_touch_pos_y = 0;
+// 		}
 
 
-        if (change_flg){
-				  if(pos < 1) {pos = 1; change_flg = false;}
-				  if(pos > 65) {pos = 65; change_flg = false;}
+// 		function animate() {
+// 			requestAnimationFrame(animate);
+// 			update();
+// 			TouchRender();
+// 		}
 
-          if (UserAgent == "PC"){
-            scene.remove(sphere);
-            var geometry = new THREE.SphereGeometry(500, 60, 40);
-            geometry.scale(1, 1, -1);
-            sphere = new THREE.Mesh(geometry, materials[pos - 1]);
-            sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
-            scene.add(sphere);
-          }
-          socket.emit("client_to_server_broadcast",{position: pos})
+    
+//     function handleOrientation(event) {
+//       var absolute = event.absolute;
+//       var alpha    = event.alpha;
+//       var beta     = event.beta;
+//       var gamma    = event.gamma;
 
-          change_flg = false;
-        }
-			} else {
-				camera.lookAt(camera.target);
-			}
+//       gyro = [alpha, beta, gamma];
+//   }
+    
+    
+        
+// 		function update() {
+// 			lat = Math.max(-85, Math.min(85, lat));
+// 			phi = THREE.Math.degToRad(90 - lat);
+// 			theta = THREE.Math.degToRad(lon - mobile_rotation);
 
-			var keyVector = new THREE.Vector3(0, 0, 0);
-			if (game.input.up) keyVector.x += 1;
-			if (game.input.left) keyVector.z -= 1;
-			if (game.input.down) keyVector.x -= 1;
-			if (game.input.right) keyVector.z += 1;
+// 			camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
+// 			camera.target.y = 500 * Math.cos(phi);
+// 			camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
 
-			if (!(keyVector.x == 0 && keyVector.z == 0)) {
-				if (keyVector.x > 0){
-					pos += 1;
-				}
-				if (keyVector.x < 0){
-					pos -= 1;
-				}
-				if(pos < 1) pos = 1;
-				if(pos > 65) pos = 65;
+//       if (gyroAvailable && (_ua.Mobile || _ua.Tablet)){
+//         console.log(gyro);
+        
+        
+//         if ((gyro[1] + offset) > 0){
+//           sum_plus_roll += (gyro[1] + offset);
+//         }
+//         if ((gyro[1] + offset) < 0){
+//           sum_minus_roll += (gyro[1] + offset);
+//         }
+        
+//         if (sum_plus_roll >= 150){
+//           change_flg = true;
+//           pos -= 1;
+//           sum_plus_roll = 0;
+//         }
+//         if (sum_minus_roll <= -150){
+//           change_flg = true;
+//           pos += 1;
+//           sum_minus_roll = 0;
+//         }
+        
+//         socket.emit("client_to_server_broadcast_rotation",{rotation: gyro[0]});
+        
+  			
+//         if (change_flg){
+// 				  if(pos < 1) {pos = 1; change_flg = false;}
+// 				  if(pos > 65) {pos = 65; change_flg = false;}
 
-        if (UserAgent == "PC"){
-    			scene.remove(sphere);
-	    		var geometry = new THREE.SphereGeometry(500, 60, 40);
-		    	geometry.scale(1, 1, -1);
-			    sphere = new THREE.Mesh(geometry, materials[pos - 1]);
-			    sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
-			    scene.add(sphere);
-        }
+//           if (UserAgent == "PC"){
+//             scene.remove(sphere);
+//             var geometry = new THREE.SphereGeometry(500, 60, 40);
+//             geometry.scale(1, 1, -1);
+//             sphere = new THREE.Mesh(geometry, materials[pos - 1]);
+//             sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
+//             scene.add(sphere);
+//           }
+//           socket.emit("client_to_server_broadcast",{position: pos})
+          
+//           change_flg = false;
+//         }
+// 			} else {
+// 				camera.lookAt(camera.target);
+// 			}
 
-        socket.emit("client_to_server_broadcast",{position: pos})
-			}
-			renderer.render(scene, camera);
-		}
+// 			var keyVector = new THREE.Vector3(0, 0, 0);
+// 			if (game.input.up) keyVector.x += 1;
+// 			if (game.input.left) keyVector.z -= 1;
+// 			if (game.input.down) keyVector.x -= 1;
+// 			if (game.input.right) keyVector.z += 1;
 
+// 			if (!(keyVector.x == 0 && keyVector.z == 0)) {
+// 				if (keyVector.x > 0){
+// 					pos += 1;
+// 				}
+// 				if (keyVector.x < 0){
+// 					pos -= 1;
+// 				}
+// 				if(pos < 1) pos = 1;
+// 				if(pos > 65) pos = 65;
 
+//         if (UserAgent == "PC"){
+//     			scene.remove(sphere);
+// 	    		var geometry = new THREE.SphereGeometry(500, 60, 40);
+// 		    	geometry.scale(1, 1, -1);
+// 			    sphere = new THREE.Mesh(geometry, materials[pos - 1]);
+// 			    sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
+// 			    scene.add(sphere);
+//         }
+        
+//         socket.emit("client_to_server_broadcast",{position: pos})
+// 			}
+// 			renderer.render(scene, camera);
+// 		}
 
-		//タッチ場所の可視化プログラム
-		function TouchRender(){
-      if (UserAgent == "PC"){
-  			var str = "UserAgent : " + UserAgent + "<br>" + "Click : " + isUserInteracting + "<br>" + "Click pos X : " + onMouseDownMouseX + "<br>" + "Click pos Y : " + onMouseDownMouseY + "<br>" + "mouse pos X : " + MousePosX + "<br>" + "mouse pos Y : " + MousePosY + "<br>" + "filepath : " + pos + ".jpg";
-	  		str = str + "<br>" + "gesture : " + isGesture + "<br>" + "rotation : " + rotation + "<br>" + "scale : " + scale;
-		  	var debug = str + "<br>" + "debug : " + "<br>" + "pos : " + pos;
-			  document.getElementById("TouchText").innerHTML = str;
-  			// document.getElementById("TouchText").innerHTML = debug;
-      } else if (UserAgent == "Tablet" || "Mobile"){
-			var str = "UserAgent : " + UserAgent + "<br>" + "touch : " + isUserInteracting + "<br>";
-			for (var i = 0; i < touch_num; i++){
-				str = str + "touch num : " + (i + 1) + ",posX : " + touchposX[i] + ", posY : " + touchposY[i] + "<br>";
-			}
-			// str = str + "<br>" + "filepath : " + pos + ".jpg" + "<br>" + "gesture : " + isGesture + "<br>" + "rotation : " + rotation + "<br>" + "scale : " + scale + "<br>" + "quaternion : " + "[" + quaternion_log.x + ", " + quaternion_log.y + ", " + quaternion_log.z + ", " + quaternion_log.w + "]";
-			var debug = str + "<br>" + "debug : " + "<br>" + "pos : " + pos;
-			document.getElementById("TouchText").innerHTML = str;
-  			// document.getElementById("TouchText").innerHTML = debug;
-      }
-		}
+    
+    
+// 		//タッチ場所の可視化プログラム
+// 		function TouchRender(){
+//       if (UserAgent == "PC"){
+//   			var str = "UserAgent : " + UserAgent + "<br>" + "Click : " + isUserInteracting + "<br>" + "Click pos X : " + onMouseDownMouseX + "<br>" + "Click pos Y : " + onMouseDownMouseY + "<br>" + "mouse pos X : " + MousePosX + "<br>" + "mouse pos Y : " + MousePosY + "<br>" + "filepath : " + pos + ".jpg";
+// 	  		str = str + "<br>" + "gesture : " + isGesture + "<br>" + "rotation : " + rotation + "<br>" + "scale : " + scale;
+// 		  	var debug = str + "<br>" + "debug : " + "<br>" + "pos : " + pos;
+// 			  document.getElementById("TouchText").innerHTML = str;
+//   			// document.getElementById("TouchText").innerHTML = debug;
+//       } else if (UserAgent == "Tablet" || "Mobile"){
+// 			var str = "UserAgent : " + UserAgent + "<br>" + "touch : " + isUserInteracting + "<br>";
+// 			for (var i = 0; i < touch_num; i++){
+// 				str = str + "touch num : " + (i + 1) + ",posX : " + touchposX[i] + ", posY : " + touchposY[i] + "<br>";
+// 			}
+// 			// str = str + "<br>" + "filepath : " + pos + ".jpg" + "<br>" + "gesture : " + isGesture + "<br>" + "rotation : " + rotation + "<br>" + "scale : " + scale + "<br>" + "quaternion : " + "[" + quaternion_log.x + ", " + quaternion_log.y + ", " + quaternion_log.z + ", " + quaternion_log.w + "]";
+// 			var debug = str + "<br>" + "debug : " + "<br>" + "pos : " + pos;
+// 			document.getElementById("TouchText").innerHTML = str;
+//   			// document.getElementById("TouchText").innerHTML = debug;
+//       }
+// 		}
 
-    function Change_pos(_pos){
-      pos = _pos;
-      if (UserAgent == "PC"){
-        scene.remove(sphere)
-        var geometry = new THREE.SphereGeometry(500, 60, 40);
-        geometry.scale(1, 1, -1);
-        sphere = new THREE.Mesh(geometry, materials[pos - 1]);
-        sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
-        scene.add(sphere)
-      }
-    }
-
-    function Change_rotate(_rotation){
-      mobile_rotation = _rotation;
-    }
+//     function Change_pos(_pos){
+//       pos = _pos;
+//       if (UserAgent == "PC"){
+//         scene.remove(sphere)
+//         var geometry = new THREE.SphereGeometry(500, 60, 40);
+//         geometry.scale(1, 1, -1);
+//         sphere = new THREE.Mesh(geometry, materials[pos - 1]);
+//         sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
+//         scene.add(sphere)
+//       }
+//     }
+    
+//     function Change_rotate(_rotation){
+//       mobile_rotation = _rotation;
+//     }
 
 	</script>
 </body>
