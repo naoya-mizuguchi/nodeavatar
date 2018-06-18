@@ -130,7 +130,11 @@
     var mobile_rotation = 0;
     var offset = -30;
 
+    var camera_target_x = 0;
+    var camera_target_y = 0;
+    var camera_target_z = 0;
 
+    
     var UserAgent = "";
 		if (_ua.Tablet) {
 			UserAgent = "Tablet";
@@ -145,9 +149,9 @@
 		gameInit();
 		init();
 
-    // var socket = io.connect(); // C02. ソケットへの接続
-    // socket.on("server_to_client",function(data){Change_pos(data.position)});
-    // socket.on("server_to_client_rotation",function(data){Change_rotate(data.rotation)});
+    var socket = io.connect(); // C02. ソケットへの接続
+    socket.on("server_to_client",function(data){Change_pos(data.position)});
+    socket.on("server_to_client_rotation",function(data){Change_rotate(data.rotation)});
     
 		// animate();
 
@@ -176,8 +180,7 @@
       var geometry = new THREE.SphereGeometry(500, 60, 40);
 			geometry.scale(1, 1, -1);
       material = new THREE.MeshBasicMaterial({map:THREE.ImageUtils.loadTexture("Resources/path1.jpg")});
-      // for (var i = 1; i<=65; i++){
-      for (var i = 1; i<=5; i++){
+      for (var i = 1; i<=65; i++){
         materials[i-1] = new THREE.MeshBasicMaterial({map : THREE.ImageUtils.loadTexture("Resources/path" + i + ".jpg")});
       }
 
@@ -203,28 +206,28 @@
 			// window.addEventListener('gestureend',onGestureEnd, false);
 			// window.addEventListener("deviceorientation", handleOrientation, true);
       
-// 			if ("ongesturestart" in window) {
-// 					console.log("ok");
-// 			 	} else {
-// 					console.log("no");
-// 				}
+			if ("ongesturestart" in window) {
+					console.log("ok");
+			 	} else {
+					console.log("no");
+				}
 
-//       gyroAvailable = false;
-// 			if (window.DeviceMotionEvent) {
-// 				gyroAvailable = true;
-// 			}
-// 			if (gyroAvailable) {
-// 				window.addEventListener("deviceorientation", gyroSensor, false);
-// 			}
+      gyroAvailable = false;
+			if (window.DeviceMotionEvent) {
+				gyroAvailable = true;
+			}
+			if (gyroAvailable) {
+				window.addEventListener("deviceorientation", gyroSensor, false);
+			}
 
-//       if (window.TouchEvent) {
-// 				// タッチを開始すると実行されるイベント
-// 				document.addEventListener("touchstart", onDocumentTouchDown, false);
-// 				// タッチしたまま平行移動すると実行されるイベント
-// 				document.addEventListener("touchmove", onDocumentTouchMove, false);
-// 				// タッチを終了すると実行されるイベント
-// 				document.addEventListener("touchend", onDocumentTouchEnd, false);
-// 			}
+			// if (window.TouchEvent) {
+			// 	// タッチを開始すると実行されるイベント
+			// 	document.addEventListener("touchstart", onDocumentTouchDown, false);
+			// 	// タッチしたまま平行移動すると実行されるイベント
+			// 	document.addEventListener("touchmove", onDocumentTouchMove, false);
+			// 	// タッチを終了すると実行されるイベント
+			// 	document.addEventListener("touchend", onDocumentTouchEnd, false);
+			// }
       
       
       //Blenderで出力したjsonオブジェクト
@@ -239,10 +242,14 @@
       json.scale.set( 50, 50, 50 );
       scene.add( json );
 
+      animate();
+
+      
       let current_frame = 1,
           total_frame   = 41
 
       let animation = ( function(){
+          console.log("fugafuga");
           requestAnimationFrame( arguments.callee )
 
           last_frame = current_frame
@@ -438,11 +445,12 @@
 // 		}
 
 
-// 		function animate() {
-// 			requestAnimationFrame(animate);
+		function animate() {
+			requestAnimationFrame(animate);
 // 			update();
 // 			TouchRender();
-// 		}
+      console.log("hogehoge");
+		}
 
     
 //     function handleOrientation(event) {
@@ -461,9 +469,9 @@
 // 			phi = THREE.Math.degToRad(90 - lat);
 // 			theta = THREE.Math.degToRad(lon - mobile_rotation);
 
-// 			camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
-// 			camera.target.y = 500 * Math.cos(phi);
-// 			camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+// 			camera_target_x = 500 * Math.sin(phi) * Math.cos(theta);
+// 			camera_target_y = 500 * Math.cos(phi);
+// 			camera_target_z = 500 * Math.sin(phi) * Math.sin(theta);
 
 //       if (gyroAvailable && (_ua.Mobile || _ua.Tablet)){
 //         console.log(gyro);
@@ -507,7 +515,7 @@
 //           change_flg = false;
 //         }
 // 			} else {
-// 				camera.lookAt(camera.target);
+// 				camera.lookAt((camera_target_x,camera_target_y,camera_target_z));
 // 			}
 
 // 			var keyVector = new THREE.Vector3(0, 0, 0);
