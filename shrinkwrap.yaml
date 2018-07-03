@@ -244,7 +244,7 @@ packages:
     resolution:
       integrity: sha1-AI4G2AlDIMNy28L47XagymyKxBk=
 registry: 'https://registry.npmjs.org/'
-shrinkwrapMinorVersion: 7
+shrinkwrapMinorVersion: 8
 shrinkwrapVersion: 3
 specifiers:
   socket.io: ^2.1.1

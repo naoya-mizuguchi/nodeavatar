@@ -7,8 +7,7 @@
 <!--   <script type="text/javascript" src="game/three.min.js"></script> -->
   <script type="text/javascript" src="https://cdn.glitch.com/edd0a2e3-7ffe-40e6-bff9-b7da5134a1cf%2Fthree.min.js?1529241691436"></script>
   <script type="text/javascript" src="game/enchant.min.js"></script>
-	<!-- TODO -->
-  <!-- <script type="text/javascript" src="/socket.io/socket.io.js"></script> -->
+ <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 
 	<style>
 	.wrapper{
@@ -135,6 +134,9 @@
     var camera_target_y = 0;
     var camera_target_z = 0;
 
+    // trueのときだけsocketを使う
+    // falseでsocket関係全部off
+    var socketio_debug = false;
 
     var UserAgent = "";
 		if (_ua.Tablet) {
@@ -151,12 +153,11 @@
 		init();
 
 
-		// TODO
-    // var socket = io.connect(); // C02. ソケットへの接続
-    // socket.on("server_to_client",function(data){Change_pos(data.position)});
+		if (socketio_debug){
+      var socket = io.connect(); // C02. ソケットへの接続
+      socket.on("server_to_client",function(data){Change_pos(data.position)});
+    }
     // socket.on("server_to_client_rotation",function(data){Change_rotate(data.rotation)});
-
-		// animate();
 
 		function init() {
 
@@ -187,11 +188,11 @@
         materials[i-1] = new THREE.MeshBasicMaterial({map : THREE.ImageUtils.loadTexture("Resources/path" + i + ".jpg")});
       }
 
-      if (UserAgent == "PC"){
+      // if (UserAgent == "PC"){
   			sphere = new THREE.Mesh(geometry, materials[0]);
 	  		sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
 		  	scene.add(sphere);
-      }
+      // }
 
 			renderer = new THREE.WebGLRenderer();
 			renderer.setPixelRatio(window.devicePixelRatio);
@@ -338,6 +339,9 @@
         sphere = new THREE.Mesh(geometry, materials[pos - 1]);
         sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
         scene.add(sphere)
+        if(socketio_debug){
+          socket.emit("client_to_server_broadcast",{position: pos});
+        }
         socket.emit("client_to_server_broadcast",{position: pos});
       }
 		}
@@ -413,18 +417,18 @@
         if(pos < 1) pos = 1;
 	  		if(pos > 65) pos = 65;
 
-        if (UserAgent == "PC"){
+        // if (UserAgent == "PC"){
           scene.remove(sphere);
           var geometry = new THREE.SphereGeometry(500, 60, 40);
           geometry.scale(1, 1, -1);
           sphere = new THREE.Mesh(geometry, materials[pos - 1]);
           sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
           scene.add(sphere);
+        // }
+
+        if (socketio_debug){
+          socket.emit("client_to_server_broadcast",{position: pos});
         }
-
-
-        socket.emit("client_to_server_broadcast",{position: pos});
-
         pos_change_flg = false;
       }
 
@@ -463,9 +467,6 @@
 		}
 
 
-
-
-
 		function update() {
 			lat = Math.max(-85, Math.min(85, lat));
 			phi = THREE.Math.degToRad(90 - lat);
@@ -476,9 +477,6 @@
 			camera_target_z = 500 * Math.sin(phi) * Math.sin(theta);
 
       if (gyroAvailable && (_ua.Mobile || _ua.Tablet)){
-        console.log(gyro);
-
-
         if ((gyro[1] + offset) > 0){
           sum_plus_roll += (gyro[1] + offset);
         }
@@ -497,7 +495,6 @@
           sum_minus_roll = 0;
         }
 
-				// TODO
         // socket.emit("client_to_server_broadcast_rotation",{rotation: gyro[0]});
 
 
@@ -505,18 +502,21 @@
 				  if(pos < 1) {pos = 1; change_flg = false;}
 				  if(pos > 65) {pos = 65; change_flg = false;}
 
-          if (UserAgent == "PC"){
+          // if (UserAgent == "PC"){
             scene.remove(sphere);
             var geometry = new THREE.SphereGeometry(500, 60, 40);
             geometry.scale(1, 1, -1);
             sphere = new THREE.Mesh(geometry, materials[pos - 1]);
             sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
             scene.add(sphere);
+          // }
+          if (socketio_debug){
+            socket.emit("client_to_server_broadcast",{position: pos})
           }
-					// TODO
-          // socket.emit("client_to_server_broadcast",{position: pos})
-
           change_flg = false;
+
+          camera.lookAt(new THREE.Vector3(camera_target_x,camera_target_y,camera_target_z));
+          
         }
 			} else {
 				camera.lookAt(new THREE.Vector3(camera_target_x,camera_target_y,camera_target_z));
@@ -538,17 +538,18 @@
 				if(pos < 1) pos = 1;
 				if(pos > 65) pos = 65;
 
-        if (UserAgent == "PC"){
+        // if (UserAgent == "PC"){
     			scene.remove(sphere);
 	    		var geometry = new THREE.SphereGeometry(500, 60, 40);
 		    	geometry.scale(1, 1, -1);
 			    sphere = new THREE.Mesh(geometry, materials[pos - 1]);
 			    sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
 			    scene.add(sphere);
-        }
+        // }
 
-				// TODO
-        // socket.emit("client_to_server_broadcast",{position: pos})
+        if (socketio_debug){
+          socket.emit("client_to_server_broadcast",{position: pos})
+        }
 			}
 			renderer.render(scene, camera);
 		}
@@ -575,22 +576,21 @@
       }
 		}
 
-//     function Change_pos(_pos){
-//       pos = _pos;
-//       if (UserAgent == "PC"){
-//         scene.remove(sphere)
-//         var geometry = new THREE.SphereGeometry(500, 60, 40);
-//         geometry.scale(1, 1, -1);
-//         sphere = new THREE.Mesh(geometry, materials[pos - 1]);
-//         sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
-//         scene.add(sphere)
-//       }
-//     }
+    function Change_pos(_pos){
+      pos = _pos;
+      // if (UserAgent == "PC"){
+        scene.remove(sphere)
+        var geometry = new THREE.SphereGeometry(500, 60, 40);
+        geometry.scale(1, 1, -1);
+        sphere = new THREE.Mesh(geometry, materials[pos - 1]);
+        sphere.rotation.y = THREE.Math.degToRad(sphereAngleOffset);
+        scene.add(sphere)
+      // }
+    }
 
-//     function Change_rotate(_rotation){
-//       mobile_rotation = _rotation;
-//     }
-
+    function Change_rotate(_rotation){
+      mobile_rotation = _rotation;
+    }
 	</script>
 </body>
 
