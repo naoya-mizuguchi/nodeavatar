@@ -29,7 +29,6 @@ var io = socketio.listen(server);
 io.sockets.on('connection', function(socket) {
   socket.on('client_to_server_broadcast', function(data) {
     // S06. server_to_clientイベント・データを送信する
-    console.log(data.position);
     socket.broadcast.emit('server_to_client', {position: data.position});
   })
   
