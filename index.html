@@ -114,7 +114,7 @@
 		var scale = 1;
 		var touch_num = 0;
 		var touchposX = [];
-		var touchposY = []
+		var touchposY = [];
     var quaternion_log;
 
     var before_touch_pos_x = 0;
@@ -134,10 +134,13 @@
     var camera_target_y = 0;
     var camera_target_z = 0;
 
+    var walking = false; //歩行している間 true
+    
     // trueのときだけsocketを使う
     // falseでsocket関係全部off
     var socketio_debug = false;
 
+    
     var UserAgent = "";
 		if (_ua.Tablet) {
 			UserAgent = "Tablet";
@@ -176,10 +179,6 @@
       var directionalLight = new THREE.DirectionalLight( 0xffffff, 2 ); //平行光源（色、強度）
       directionalLight.position.set(-3,-3,-3);
       scene.add( directionalLight );
-      //グリッド
-      // grid = new THREE.GridHelper(1000, 10, 0x888888, 0x888888);
-      // grid.position.y = -40;
-      // scene.add(grid);
 
       var geometry = new THREE.SphereGeometry(500, 60, 40);
 			geometry.scale(1, 1, -1);
@@ -255,15 +254,28 @@
       let animation = ( function(){
           requestAnimationFrame( arguments.callee )
 
-          last_frame = current_frame
-          current_frame++
+          console.log(pos_change_flg);
+          console.log(change_flg);
+          if ((pos_change_flg || change_flg) && !(walking)){           
+              console.log("walking");
+              walking = true;
+          }
+        
+          if (walking){        
+            last_frame = current_frame
+            current_frame++
 
-          // 現在のフレーム数が合計のフレーム数以上になったら現在のフレームを始めに戻す
-          if( total_frame <= current_frame ) current_frame = 0
+            // 現在のフレーム数が合計のフレーム数以上になったら現在のフレームを始めに戻す
+            if( total_frame <= current_frame ) {
+              current_frame = 0
+              walking = false
+            }
 
-          json.morphTargetInfluences[last_frame] = 0
-          json.morphTargetInfluences[current_frame] = 1
-
+            json.morphTargetInfluences[last_frame] = 0
+            json.morphTargetInfluences[current_frame] = 1
+            
+          }
+        
           renderer.render( scene, camera )
       } )()
 
@@ -332,7 +344,8 @@
 			if(pos < 1) pos = 1;
 			if(pos > 65) pos = 65;
 
-      if (UserAgent == "PC"){
+      // if (UserAgent == "PC"){
+        walking = true;
         scene.remove(sphere);
         var geometry = new THREE.SphereGeometry(500, 60, 40);
         geometry.scale(1, 1, -1);
@@ -342,8 +355,7 @@
         if(socketio_debug){
           socket.emit("client_to_server_broadcast",{position: pos});
         }
-        socket.emit("client_to_server_broadcast",{position: pos});
-      }
+      // }
 		}
 
 		function onGestureStart(event) {
@@ -477,6 +489,7 @@
 			camera_target_z = 500 * Math.sin(phi) * Math.sin(theta);
 
       if (gyroAvailable && (_ua.Mobile || _ua.Tablet)){
+
         if ((gyro[1] + offset) > 0){
           sum_plus_roll += (gyro[1] + offset);
         }
@@ -591,6 +604,7 @@
     function Change_rotate(_rotation){
       mobile_rotation = _rotation;
     }
+
 	</script>
 </body>
 
